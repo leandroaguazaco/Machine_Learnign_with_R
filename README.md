@@ -1,6 +1,20 @@
 # Machine_Learnign_with_R
-Exploring some machine learning algorithms and models through R programming language.
+Exploring some machine learning algorithms and models through *R programming language*.
 
-Popular machine learning algorithms such classification, regression, clustering and dimensional reduction.
+<p align="center">
+  <img src="https://www.r-project.org/Rlogo.png" />
+</p>
 
-Popular models such train/test split, root mean squared error and random forests.
+> **Popular machine learning algorithms**: 
+
+ * Classification 
+ * Regression 
+ * Clustering 
+ * Dimensional reduction
+
+> **Popular models**:
+
+* Train/test split
+* Root mean squared error 
+* Random forests.
+
