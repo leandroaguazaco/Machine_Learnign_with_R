@@ -1,4 +1,4 @@
-# Machine_Learnign_with_R
+# Machine Learnign with R
 Exploring some machine learning algorithms and models through *R programming language*.
 
 <p align="center">
