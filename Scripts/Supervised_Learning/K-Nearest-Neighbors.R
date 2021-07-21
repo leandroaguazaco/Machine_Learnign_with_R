@@ -9,7 +9,7 @@ library(e1071)
 library(base)
 library(plotly)
 
-# Data ====
+# 1. Data ====
 
 ?Sonar # Information about "Sonar" data set
 data("Sonar") # From mlbench library
@@ -60,7 +60,7 @@ Sonar %>%
           axis.title.x = element_text(vjust = -0.20))
 )
  
-# Training and Test Data ====
+# 2. Training and Test Data ====
 
 set.seed(123) # Due the randomly selection
 
@@ -79,14 +79,39 @@ paste("Training observations =", nrow(training), ",", "Test observations =", nro
 prop.table(table(training$Class)) # Both set almost have the same proportion of Class labels
 prop.table(table(test$Class))
 
-# Training a model on data ====
+# 3. Training a model on data ====
 
-# Using knn function from the 'class' library with k = 3
-# Using Euclidean distance
+# Using knn function from the 'class' library with k = 3.
+# Using Euclidean distance.
+# Minimum number of neighbors points = k -1 
 
 knn_model <- knn(train = training[ , -61],  # Training set cases
                  test = test[ , -61], # Test set cases
                  cl = training[ , "Class"], # Labels of training set  
-                 k = 3,
-                 prob = TRUE)
+                 k = 3)
+knn_model
 
+# 4. Evaluate the model performance ==== 
+
+# Confusion matrix to evaluate the model performance
+confusion_mat <- xtabs(~ test$Class + knn_model) # labels from test set vs output labels from the model
+confusion_mat
+table(test$Class, knn_model)
+
+# Model performance accuracy 
+accuracy <- sum(diag(confusion_mat)) / sum(confusion_mat)
+accuracy
+
+# Assess k = 3
+# Leave-one-out cross-validation for the training data using knn.cv function
+knn_model_Loocv <- knn.cv(train = training[ , -61], 
+                          cl = training$Class, 
+                          k = 3)
+
+confusion_mat_Loocv <- xtabs(~ training$Class + knn_model_Loocv) # labels from training set vs output labels from the model Loocv
+confusion_mat_Loocv
+
+accuracy_Loocv <- sum(diag(confusion_mat_Loocv)) / sum(confusion_mat_Loocv)
+accuracy_Loocv
+
+# Depending the k value, k-NN algorithm is susceptible to overfitting.
