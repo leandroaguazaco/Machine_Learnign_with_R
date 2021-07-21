@@ -2,7 +2,7 @@
 # Libraries ====
 
 library(tidyverse)
-library(class)
+library(class) # K-NN algorithm
 library(caret)
 library(mlbench)
 library(e1071)
@@ -60,3 +60,33 @@ Sonar %>%
           axis.title.x = element_text(vjust = -0.20))
 )
  
+# Training and Test Data ====
+
+set.seed(123) # Due the randomly selection
+
+# Training data 
+training <- sample_frac(tbl = Sonar, # training data: 70% from the original data set
+                        size = 0.7)
+
+# Test data
+test <- setdiff(x = Sonar, y = training) # Row that appear in X but not in y
+
+# Alternative way to select test data from the original data set
+Sonar[!(rownames(Sonar) %in% rownames(training)), ] # Are the left items in the elements on the right side? 
+
+paste("Training observations =", nrow(training), ",", "Test observations =", nrow(test))
+
+prop.table(table(training$Class)) # Both set almost have the same proportion of Class labels
+prop.table(table(test$Class))
+
+# Training a model on data ====
+
+# Using knn function from the 'class' library with k = 3
+# Using Euclidean distance
+
+knn_model <- knn(train = training[ , -61],  # Training set cases
+                 test = test[ , -61], # Test set cases
+                 cl = training[ , "Class"], # Labels of training set  
+                 k = 3,
+                 prob = TRUE)
+
