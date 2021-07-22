@@ -83,7 +83,7 @@ prop.table(table(test$Class))
 
 # Using knn function from the 'class' library with k = 3.
 # Using Euclidean distance.
-# Minimum number of neighbors points = k -1 
+# Minimum number of neighbors points = k-1 
 
 knn_model <- knn(train = training[ , -61],  # Training set cases
                  test = test[ , -61], # Test set cases
@@ -135,7 +135,7 @@ control <- trainControl(method = "repeatedcv", # Parameters for train function
                         repeats = 2)
 
 # k values selected, data frame with possible tuning values
-k_grid <- data.frame(k = c(5:10))
+k_grid <- data.frame(k = c(1, 3, 5, 7))
 k_grid
 
 # 5.3 Built model through 'caret' package
@@ -155,7 +155,7 @@ best_model
 # Performance on training data
 predictions_training <- knn.cv(train = new_training[ , -61], 
                                cl = new_training$Class, 
-                               k = 5)
+                               k = 1)
 
 confusionMatrix(predictions_training, new_training$Class)
 
