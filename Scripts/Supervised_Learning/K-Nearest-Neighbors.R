@@ -115,3 +115,57 @@ accuracy_Loocv <- sum(diag(confusion_mat_Loocv)) / sum(confusion_mat_Loocv)
 accuracy_Loocv
 
 # Depending the k value, k-NN algorithm is susceptible to overfitting.
+
+# 5. Improve the model performance ====
+
+# Choosing a suitable𝑘through repeated cross-validations using 'caret' library.
+# Repeated k-Fold-Cross-Validation, k = [5, 10]
+
+# 5.1 Training and test data
+training_index <- createDataPartition(y = Sonar$Class, # Selecting indexes
+                                      p = 0.7, 
+                                      list = FALSE)
+
+new_training <- Sonar[training_index, ]
+new_test <- Sonar[-training_index, ]
+
+# 5.2 function setup to do 5-fold cross-validation with 2 repeat.
+control <- trainControl(method = "repeatedcv", # Parameters for train function
+                        number = 5, 
+                        repeats = 2)
+
+# k values selected, data frame with possible tuning values
+k_grid <- data.frame(k = c(5:10))
+k_grid
+
+# 5.3 Built model through 'caret' package
+names(getModelInfo()) # Classification or regression models in 'caret' package
+
+best_model <- train(Class ~ ., 
+                    data = new_training, 
+                    method = "knn", 
+                    trControl = control, 
+                    preProcess = "pca", 
+                    tuneGrid = k_grid)
+
+best_model
+
+# 5.4 Evaluate model
+
+# Performance on training data
+predictions_training <- knn.cv(train = new_training[ , -61], 
+                               cl = new_training$Class, 
+                               k = 5)
+
+confusionMatrix(predictions_training, new_training$Class)
+
+# Performance on test data
+new_test_pred <- new_test[ , -61]
+
+predictions_test <- predict(object = best_model, 
+                            newdata = new_test_pred,
+                            model = "best")
+
+confusionMatrix(predictions_test, new_test$Class)
+
+
