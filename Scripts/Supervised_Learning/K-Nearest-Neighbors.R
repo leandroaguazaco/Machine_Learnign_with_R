@@ -6,6 +6,7 @@ library(class) # K-NN algorithm
 library(caret)
 library(mlbench)
 library(e1071)
+library(psych)
 library(base)
 library(plotly)
 
@@ -69,7 +70,7 @@ training <- sample_frac(tbl = Sonar, # training data: 70% from the original data
                         size = 0.7)
 
 # Test data
-test <- setdiff(x = Sonar, y = training) # Row that appear in X but not in y
+test <- setdiff(x = Sonar, y = training) # Rows that appear in X but not in y
 
 # Alternative way to select test data from the original data set
 Sonar[!(rownames(Sonar) %in% rownames(training)), ] # Are the left items in the elements on the right side? 
@@ -98,9 +99,12 @@ confusion_mat <- xtabs(~ test$Class + knn_model) # labels from test set vs outpu
 confusion_mat
 table(test$Class, knn_model)
 
-# Model performance accuracy 
-accuracy <- sum(diag(confusion_mat)) / sum(confusion_mat)
+# Model performance: accuracy 
+accuracy <- sum(diag(confusion_mat)) / sum(confusion_mat) # Problematic due the unbalanced data 
 accuracy
+
+# Model performance: Kappa statistic
+cohen.kappa(x = data.frame(test$Class, knn_model))
 
 # Assess k = 3
 # Leave-one-out cross-validation for the training data using knn.cv function
@@ -114,7 +118,7 @@ confusion_mat_Loocv
 accuracy_Loocv <- sum(diag(confusion_mat_Loocv)) / sum(confusion_mat_Loocv)
 accuracy_Loocv
 
-# Depending the k value, k-NN algorithm is susceptible to overfitting.
+# Depending the k value, k-NN algorithm can be prone to overfitting.
 
 # 5. Improve the model performance ====
 
@@ -128,6 +132,9 @@ training_index <- createDataPartition(y = Sonar$Class, # Selecting indexes
 
 new_training <- Sonar[training_index, ]
 new_test <- Sonar[-training_index, ]
+
+prop.table(table(new_training$Class)) # It preserver the distribution of the outcome or target 
+prop.table(table(new_test$Class))
 
 # 5.2 function setup to do 5-fold cross-validation with 2 repeat.
 control <- trainControl(method = "repeatedcv", # Parameters for train function
@@ -145,7 +152,7 @@ best_model <- train(Class ~ .,
                     data = new_training, 
                     method = "knn", 
                     trControl = control, 
-                    preProcess = "pca", 
+                    preProcess = c("center", "scale"), 
                     tuneGrid = k_grid)
 
 best_model
@@ -158,14 +165,16 @@ predictions_training <- knn.cv(train = new_training[ , -61],
                                k = 1)
 
 confusionMatrix(predictions_training, new_training$Class)
+cohen.kappa(data.frame(predictions_training, new_training$Class))
 
 # Performance on test data
 new_test_pred <- new_test[ , -61]
 
 predictions_test <- predict(object = best_model, 
                             newdata = new_test_pred,
-                            model = "best")
+                            k = "best")
 
 confusionMatrix(predictions_test, new_test$Class)
+
 
 
