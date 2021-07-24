@@ -136,33 +136,33 @@ new_test <- Sonar[-training_index, ]
 prop.table(table(new_training$Class)) # It preserver the distribution of the outcome or target 
 prop.table(table(new_test$Class))
 
-# 5.2 function setup to do 5-fold cross-validation with 2 repeat.
-control <- trainControl(method = "repeatedcv", # Parameters for train function
-                        number = 5, 
-                        repeats = 2)
+# 5.2 function setup to do 5-fold cross-validation with 2 repeat.Parameters for train function
+control <- trainControl(method = "repeatedcv", # Repeated k-fold cross validation 
+                        number = 5, # 5 groups
+                        repeats = 2) # 2 repetitions
 
 # k values selected, data frame with possible tuning values
-k_grid <- data.frame(k = c(1, 3, 5, 7))
+k_grid <- data.frame(k = c(1, 3, 5, 7, 9, 11))
 k_grid
 
 # 5.3 Built model through 'caret' package
 names(getModelInfo()) # Classification or regression models in 'caret' package
 
-best_model <- train(Class ~ ., 
+best_model <- train(Class ~ ., # formula
                     data = new_training, 
                     method = "knn", 
                     trControl = control, 
-                    preProcess = c("center", "scale"), 
+                    preProcess = "pca", # Highly recommended in K-NN algorithm
                     tuneGrid = k_grid)
 
-best_model
+plot(best_model) # Visually assess the changes in accuracy for different choices of k
 
 # 5.4 Evaluate model
 
 # Performance on training data
 predictions_training <- knn.cv(train = new_training[ , -61], 
                                cl = new_training$Class, 
-                               k = 1)
+                               k = 5)
 
 confusionMatrix(predictions_training, new_training$Class)
 cohen.kappa(data.frame(predictions_training, new_training$Class))
@@ -172,7 +172,7 @@ new_test_pred <- new_test[ , -61]
 
 predictions_test <- predict(object = best_model, 
                             newdata = new_test_pred,
-                            k = "best")
+                            k = 5)
 
 confusionMatrix(predictions_test, new_test$Class)
 
