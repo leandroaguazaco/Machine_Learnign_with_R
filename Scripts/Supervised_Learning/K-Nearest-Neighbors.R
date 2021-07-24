@@ -157,6 +157,32 @@ best_model <- train(Class ~ ., # formula
 
 plot(best_model) # Visually assess the changes in accuracy for different choices of k
 
+# Model Tuning 
+as.data.frame(best_model$results) %>% 
+  select(k, Accuracy, Kappa) %>% 
+  pivot_longer(cols = -k,
+               names_to = "Type", 
+               values_to = "Values") %>% 
+  ggplot(aes(x = k, 
+             y = Values, 
+             color = Type)) + 
+    geom_line() + 
+    geom_point() + 
+    geom_vline(xintercept = 5, 
+               color = "gray") + 
+    scale_x_continuous(breaks = 1:11) + 
+    scale_color_discrete(name = "Statistic:") + 
+    scale_y_continuous(breaks = seq(0.35, 0.9, 0.05)) + 
+    labs(title = "Model Tuning - KNN", 
+         x = "k = Neighbors", 
+         y = "Value") + 
+    theme_bw() + 
+    theme(plot.title = element_text(hjust = 0.5), 
+          legend.title = element_text(hjust = 0.5), 
+          legend.position = "bottom",
+          legend.box.background = element_rect(color = "black", 
+                                               size = 0.8))
+
 # 5.4 Evaluate model
 
 # Performance on training data
