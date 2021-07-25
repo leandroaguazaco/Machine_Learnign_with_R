@@ -4,6 +4,7 @@
 library(tidyverse)
 library(class) # K-NN algorithm
 library(caret)
+library(kknn) # Weighted knn
 library(mlbench)
 library(e1071)
 library(psych)
@@ -203,4 +204,31 @@ predictions_test <- predict(object = best_model,
 confusionMatrix(predictions_test, new_test$Class)
 
 
+# 6. Weighted k-Nearest Neighbor Classifier ====
+
+# Tuning model 
+# k = neighbors, kernel, distance
+wknn_training_model_LOOCV <- train.kknn(Class ~ ., # LOOCV
+                                        data = new_training, 
+                                        kmax = 10, 
+                                        distance = 2, # Euclidean Distance
+                                        kernel = c("triangular", "epanechnikov", "biweight", 
+                                                   "triweight", "cos", "inv", "gaussian", "optimal"),
+                                        scale = TRUE)
+plot(wknn_training_model_LOOCV)
+
+# Best parameters
+wknn_training_model_LOOCV$best.parameters
+
+# Model Performance
+wknn_model <- kknn(Class ~ ., 
+                   train = new_training, 
+                   test = new_test, 
+                   k = 4,
+                   distance = 2, # q parameter in Minkowski formula = Euclidean distance if q = 2
+                   kernel = "triangular")
+
+summary(wknn_model)
+
+confusionMatrix(wknn_model$fitted.values, new_test$Class)
 
