@@ -1,4 +1,4 @@
-# K-Nearest Neighbors Algorithm # 
+# K-Nearest Neighbors Model # 
 # Libraries ====
 
 library(tidyverse)
@@ -231,4 +231,3 @@ wknn_model <- kknn(Class ~ .,
 summary(wknn_model)
 
 confusionMatrix(wknn_model$fitted.values, new_test$Class)
-
