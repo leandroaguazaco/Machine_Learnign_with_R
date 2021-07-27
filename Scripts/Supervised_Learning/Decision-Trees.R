@@ -12,12 +12,20 @@
 
 # Libraries ====
 
+# Preprocessing and Visualization
 library(data.table)
 library(DataExplorer)
 library(tidyverse)
 library(plotly)
 
-# Data ====
+# Decision Trees Model
+library(rpart)
+library(rpart.plot)
+library(tree)
+library(caret)
+
+
+# 1. Data ====
 
 download.file(url = "https://ibm.box.com/shared/static/dpdh09s70abyiwxguehqvcq3dn0m7wve.data",
               destfile = "mushroom.data")
@@ -65,3 +73,43 @@ mushroom %>%
 mushroom[ , c("Class", "odor", "print")] %>% plot_intro(ggtheme = theme_bw()) # Variable types and missing values
 mushroom[ , c("Class", "odor", "print")] %>% plot_bar(ggtheme = theme_bw()) # Bar plot
 mushroom[ , c("Class", "odor", "print")] %>% plot_missing(ggtheme = theme_bw()) # Percentage missing values by variables
+
+# 2. Training and Test Data ====
+
+set.seed(123)
+training <- sample_frac(tbl = mushroom, 
+                        size = 0.75, 
+                        replace = FALSE)
+
+test <- setdiff(x = mushroom, # Rows that appear in X but not in y
+                y = training)
+
+prop.table(table(training$Class)) # Similar proportions of target variable in both set
+prop.table(table(test$Class))
+
+# 3. Model on Data ====
+
+# rpart() function
+tree_model <- rpart(Class ~ ., 
+                    data = training, 
+                    method = "class") # because the problem is about classification
+
+print(tree_model)
+summary(tree_model)
+
+# Visualizing the model
+rpart.plot(x = tree_model, 
+           type = 4, 
+           extra = 2, 
+           under = TRUE, 
+           faclen = 5, 
+           cex = 0.75)
+
+# 4. Model Performance ==== 
+
+predictions_test <- predict(object = tree_model, 
+                            newdata = test[ , -1], 
+                            type = "class")
+
+confusionMatrix(data = test$Class, 
+                reference = predictions_test)
