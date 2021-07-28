@@ -1,15 +1,4 @@
 # Decision Trees Model #
-# Algorithm ====
-
-# 1. Calculate entropy of the target field (the class label) for whole data set.
-# 2. For each attribute:
-#    * split the data set on the attribute
-#    * calculate entropy of the target field on splitted data set, using the attribute values
-#    * calculate the information gain of the attribute
-# 3. Select the attribute that has the largest information gain
-# 4. Branch the tree using the selected attribute
-# 5. Stop, if it is a node with entropy of 0, otherwise jump to step 2.
-
 # Libraries ====
 
 # Preprocessing and Visualization
@@ -25,7 +14,18 @@ library(tree)
 library(caret)
 
 
-# 1. Data ====
+# 1.0 Classification Trees Algorithm ====
+
+# 1. Calculate entropy of the target field (the class label) for whole data set.
+# 2. For each attribute:
+#    * split the data set on the attribute
+#    * calculate entropy of the target field on splitted data set, using the attribute values
+#    * calculate the information gain of the attribute
+# 3. Select the attribute that has the largest information gain
+# 4. Branch the tree using the selected attribute
+# 5. Stop, if it is a node with entropy of 0, otherwise jump to step 2.
+
+# 1.1 Data ====
 
 download.file(url = "https://ibm.box.com/shared/static/dpdh09s70abyiwxguehqvcq3dn0m7wve.data",
               destfile = "mushroom.data")
@@ -74,7 +74,7 @@ mushroom[ , c("Class", "odor", "print")] %>% plot_intro(ggtheme = theme_bw()) # 
 mushroom[ , c("Class", "odor", "print")] %>% plot_bar(ggtheme = theme_bw()) # Bar plot
 mushroom[ , c("Class", "odor", "print")] %>% plot_missing(ggtheme = theme_bw()) # Percentage missing values by variables
 
-# 2. Training and Test Data ====
+# 1.2 Training and Test Data ====
 
 set.seed(123)
 training <- sample_frac(tbl = mushroom, 
@@ -87,7 +87,7 @@ test <- setdiff(x = mushroom, # Rows that appear in X but not in y
 prop.table(table(training$Class)) # Similar proportions of target variable in both set
 prop.table(table(test$Class))
 
-# 3. Model on Data ====
+# 1.3 Classification Trees ====
 
 # rpart() function
 tree_model <- rpart(Class ~ ., 
@@ -105,7 +105,7 @@ rpart.plot(x = tree_model,
            faclen = 5, 
            cex = 0.75)
 
-# 4. Model Performance ==== 
+# 1.4 Model Performance ==== 
 
 predictions_test <- predict(object = tree_model, 
                             newdata = test[ , -1], 
@@ -113,3 +113,23 @@ predictions_test <- predict(object = tree_model,
 
 confusionMatrix(data = test$Class, 
                 reference = predictions_test)
+
+# 2.0 Regression Tress Algorithm ====
+
+# From "An Introduction to Statistical Learning"
+
+# 1. Use recursive binary splitting to grow a large tree on the training
+#    data, stopping only when each terminal node has fewer than some minimum number of observations.
+
+# 2. Apply cost complexity pruning to the large tree in order to obtain a
+#    sequence of best subtrees, as a function of α.
+
+# 3. Use K-fold cross-validation to choose α. That is, divide the training
+#    observations into K folds. For each k = 1, . . . , K:
+
+#  (a) Repeat Steps 1 and 2 on all but the kth fold of the training data.
+#  (b) Evaluate the mean squared prediction error on the data in the
+#      left-out kth fold, as a function of α.
+#   Average the results for each value of α, and pick α to minimize the average error.
+
+# 4. Return the subtree from Step 2 that corresponds to the chosen value of α.
