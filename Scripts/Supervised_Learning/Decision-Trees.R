@@ -74,7 +74,7 @@ mushroom[ , c("Class", "odor", "print")] %>% plot_intro(ggtheme = theme_bw()) # 
 mushroom[ , c("Class", "odor", "print")] %>% plot_bar(ggtheme = theme_bw()) # Bar plot
 mushroom[ , c("Class", "odor", "print")] %>% plot_missing(ggtheme = theme_bw()) # Percentage missing values by variables
 
-# 1.2 Training and Test Data ====
+# 1.2 Training and Testing Data ====
 
 set.seed(123)
 training <- sample_frac(tbl = mushroom, 
@@ -87,27 +87,34 @@ test <- setdiff(x = mushroom, # Rows that appear in X but not in y
 prop.table(table(training$Class)) # Similar proportions of target variable in both set
 prop.table(table(test$Class))
 
-# 1.3 Classification Trees ====
+# 1.3 Classification Tree Model ====
 
-# rpart() function
-tree_model <- rpart(Class ~ ., 
-                    data = training, 
-                    method = "class") # because the problem is about classification
+# rpart() function 
+tree_model_rpart <- rpart(Class ~ ., 
+                          data = training, 
+                          method = "class", # because the problem is about classification
+                          parms = list(split = "information"), 
+                          control = rpart.control(minsplit = 20, # min number of points for a split
+                                                  cp = 0.01, # Complexity parameter 
+                                                  xval = 10, # Number of cross validations
+                                                  maxdepth = 30)) # Maximum depth of any node
 
-print(tree_model)
-summary(tree_model)
+print(tree_model_rpart)
+summary(tree_model_rpart)
+
+tree_model_rpart$frame # Results
 
 # Visualizing the model
-rpart.plot(x = tree_model, 
+rpart.plot(x = tree_model_rpart, 
            type = 4, 
-           extra = 2, 
+           extra = 102, 
            under = TRUE, 
-           faclen = 5, 
-           cex = 0.75)
+           faclen = 9, 
+           cex = 0.75) # Text size
 
 # 1.4 Model Performance ==== 
 
-predictions_test <- predict(object = tree_model, 
+predictions_test <- predict(object = tree_model_rpart, 
                             newdata = test[ , -1], 
                             type = "class")
 
