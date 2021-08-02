@@ -93,7 +93,7 @@ prop.table(table(test$Class))
 tree_model_rpart <- rpart(Class ~ ., 
                           data = training, 
                           method = "class", # because the problem is about classification
-                          parms = list(split = "information"), 
+                          parms = list(split = "information"), # Information gain
                           control = rpart.control(minsplit = 20, # min number of points for a split
                                                   cp = 0.01, # Complexity parameter 
                                                   xval = 10, # Number of cross validations
@@ -121,7 +121,7 @@ predictions_test <- predict(object = tree_model_rpart,
 confusionMatrix(data = test$Class, 
                 reference = predictions_test)
 
-# 2.0 Regression Tress Algorithm ====
+# 2.0 Regression Trees Algorithm ====
 
 # From "An Introduction to Statistical Learning"
 
