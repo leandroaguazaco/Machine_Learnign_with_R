@@ -48,12 +48,12 @@ Sonar %>%
   ggplot(mapping = aes(x = V1)) + 
     geom_histogram(color = "black", 
                    binwidth = 0.01) + 
-    scale_y_continuous(breaks = seq(0, 36, 2)) + 
+    scale_y_continuous(breaks = seq(0, 36, 6)) + 
     labs(title = "Histogram of V1 variable by class ", 
          x = "Energy band N°1", 
          y = "Frequency") + 
     #scale_fill_viridis_d(option = "D") + 
-    facet_wrap(~ Class, 
+    facet_wrap(. ~ Class, 
                scales = "free", ) + 
     theme_bw() + 
     theme(plot.title = element_text(hjust = 0.5, 
@@ -153,7 +153,7 @@ best_model <- train(Class ~ ., # formula
                     data = new_training, 
                     method = "knn", 
                     trControl = control, 
-                    preProcess = "pca", # Highly recommended in K-NN algorithm
+                    preProcess = "pca", # Highly recommended in K-NN algorithm, implicitly scales data
                     tuneGrid = k_grid)
 
 plot(best_model) # Visually assess the changes in accuracy for different choices of k
@@ -191,7 +191,8 @@ predictions_training <- knn.cv(train = new_training[ , -61],
                                cl = new_training$Class, 
                                k = 5)
 
-confusionMatrix(predictions_training, new_training$Class)
+confusionMatrix(data = predictions_training, 
+                reference = new_training$Class)
 cohen.kappa(data.frame(predictions_training, new_training$Class))
 
 # Performance on test data
@@ -203,11 +204,11 @@ predictions_test <- predict(object = best_model,
 
 confusionMatrix(predictions_test, new_test$Class)
 
-
 # 6. Weighted k-Nearest Neighbor Classifier ====
 
 # Tuning model 
 # k = neighbors, kernel, distance
+set.seed(123)
 wknn_training_model_LOOCV <- train.kknn(Class ~ ., # LOOCV
                                         data = new_training, 
                                         kmax = 10, 
@@ -223,11 +224,49 @@ wknn_training_model_LOOCV$best.parameters
 # Model Performance
 wknn_model <- kknn(Class ~ ., 
                    train = new_training, 
-                   test = new_test, 
+                   test = new_test[ , -61], 
                    k = 4,
-                   distance = 2, # q parameter in Minkowski formula = Euclidean distance if q = 2
-                   kernel = "triangular")
-
-summary(wknn_model)
+                   distance = 1, # q parameter in Minkowski formula = Euclidean distance if q = 2
+                   kernel = "triweight", 
+                   scale = TRUE)
 
 confusionMatrix(wknn_model$fitted.values, new_test$Class)
+
+# 7. Weighted k-Nearest Neighbor Classifier - Caret package ====
+
+# Tuning model 
+# k = neighbors, kernel, distance
+getModelInfo(model = "kknn")
+
+set.seed(123)
+wknn_model_caret <- train(x = new_training[ , -61], 
+                          y = new_training$Class,
+                          method = "kknn", # model
+                          preProcess = c("center", "scale"), # highly recommended
+                          metric = "Kappa", # "Accuracy" or "ROC". Performance measure
+                          trControl = trainControl(method = "repeatedcv", 
+                                                   number = 5, #5-fold cross-validation with 2 repeat
+                                                   repeats = 2,),
+                                                   #summaryFunction = twoClassSummary, 
+                                                   #classProbs = TRUE,
+                                                   #savePredictions = TRUE), # ROC for performance measure
+                          tuneGrid = expand.grid(kmax = seq(4, 9), 
+                                                 distance = c(1, 2), 
+                                                 kernel = c("triangular", "epanechnikov", "biweight", 
+                                                            "triweight", "cos", "inv", "gaussian", "optimal")))
+
+plot(wknn_model_caret)
+summary(wknn_model_caret) # Best tuning parameters
+wknn_model_caret$results
+wknn_model_caret$bestTune
+wknn_model_caret$finalModel # This is the final decision for tuning parameters
+wknn_model_caret$times # Calculation time 
+wknn_model_caret$preProcess # if it is not taken into account, reduces the calculation time
+
+# Model Performance
+predictions_wknn_caret <- predict(object = wknn_model_caret,
+                                  newdata = new_test[ , -61])
+
+confusionMatrix(predictions_wknn_caret, new_test$Class)
+
+
