@@ -8,11 +8,12 @@ library(tidyverse)
 library(plotly)
 
 # Decision Trees Model
-library(rpart)
+library(rpart) # CART methodology
 library(rpart.plot)
 library(tree)
+library(party) # Make splits based on the conditional inference framework
+library(partykit) # convert the rpart object to a party for visualization
 library(caret)
-
 
 # 1.0 Classification Trees Algorithm ====
 
@@ -81,11 +82,11 @@ training <- sample_frac(tbl = mushroom,
                         size = 0.75, 
                         replace = FALSE)
 
-test <- setdiff(x = mushroom, # Rows that appear in X but not in y
-                y = training)
+testing <- setdiff(x = mushroom, # Rows that appear in X but not in y
+                   y = training)
 
 prop.table(table(training$Class)) # Similar proportions of target variable in both set
-prop.table(table(test$Class))
+prop.table(table(testing$Class))
 
 # 1.3 Classification Tree Model ====
 
@@ -93,9 +94,9 @@ prop.table(table(test$Class))
 tree_model_rpart <- rpart(Class ~ ., 
                           data = training, 
                           method = "class", # because the problem is about classification
-                          parms = list(split = "information"), # Information gain
+                          parms = list(split = "gini"), # gini or information gain
                           control = rpart.control(minsplit = 20, # min number of points for a split
-                                                  cp = 0.01, # Complexity parameter 
+                                                  cp = 0.01, # Complexity parameter, tuning parameter
                                                   xval = 10, # Number of cross validations
                                                   maxdepth = 30)) # Maximum depth of any node
 
@@ -106,20 +107,82 @@ tree_model_rpart$frame # Results
 
 # Visualizing the model
 rpart.plot(x = tree_model_rpart, 
-           type = 4, 
+           type = 3, 
            extra = 102, 
            under = TRUE, 
-           faclen = 9, 
+           faclen = 8, 
            cex = 0.75) # Text size
+
+plot(as.party(tree_model_rpart)) # From "party" package
 
 # 1.4 Model Performance ==== 
 
 predictions_test <- predict(object = tree_model_rpart, 
-                            newdata = test[ , -1], 
+                            newdata = testing[ , -1], 
                             type = "class")
 
-confusionMatrix(data = test$Class, 
+confusionMatrix(data = testing$Class, 
                 reference = predictions_test)
+
+# 1.5 Improve the model performance - Tuning parameters ====
+
+# Using the "caret" package and rpart function; CART approach.
+names(caret::getModelInfo(model = "rpart"))
+
+# 1.5.1 Tuning parameter: complexity parameter 
+getModelInfo(model = "rpart")
+
+set.seed(123)
+tree_model_caret <- train(x = training[ , -1], # Predictors
+                          y = training$Class, # Target
+                          method = "rpart",
+                          metric = "Accuracy",
+                          control = rpart.control(minsplit = 20, # min number of points for a split
+                                                  cp = 0.01, # Complexity parameter, tuning parameter, controls the tree pruning
+                                                  maxdepth = 30),
+                          trControl = trainControl(method = "repeatedcv", 
+                                                   number = 9, #9-fold cross-validation with 2 repeat
+                                                   repeats = 2), 
+                          tuneGrid = data.frame(cp = seq(0.01, 0.1, 0.01)))
+
+plot(tree_model_caret)
+tree_model_caret$results # Accuracy and Kappa results
+tree_model_caret$bestTune # final parameter
+tree_model_caret$finalModel
+tree_model_caret$times
+
+# 1.5.2 Evaluating performance
+predictions_caret <- predict(object = tree_model_caret, 
+                             newdata = testing[ , -1])
+
+confusionMatrix(testing$Class, predictions_caret)
+
+# 1.5.3 Tuning parameter: Maximum node depth
+getModelInfo(model = "rpart2")
+
+tree_model_caret2 <- train(x = training[ , -1], # Predictors
+                           y = training$Class, # Target
+                           method = "rpart2",
+                           metric = "Accuracy",
+                           control = rpart.control(minsplit = 20, # min number of points for a split
+                                                   cp = 0.01, # Complexity parameter, tuning parameter
+                                                   maxdepth = 5),
+                           trControl = trainControl(method = "repeatedcv", 
+                                                    number = 9, #9-fold cross-validation with 2 repeat
+                                                    repeats = 2), 
+                           tuneGrid = data.frame(maxdepth = seq(5, 30, 5))) # In rpart function default maxdepth is 30
+
+plot(tree_model_caret2)
+tree_model_caret2$results # Accuracy and Kappa results
+tree_model_caret2$bestTune # final parameter
+tree_model_caret2$finalModel
+tree_model_caret2$times
+
+# 1.5.4 Evaluating performance
+predictions_caret2 <- predict(object = tree_model_caret2, 
+                              newdata = testing[ , -1])
+
+confusionMatrix(testing$Class, predictions_caret2)
 
 # 2.0 Regression Trees Algorithm ====
 
@@ -140,3 +203,10 @@ confusionMatrix(data = test$Class,
 #   Average the results for each value of α, and pick α to minimize the average error.
 
 # 4. Return the subtree from Step 2 that corresponds to the chosen value of α.
+
+# Tuning parameters: 
+#   Complexity parameter
+#   Maximum node depth 
+
+
+
