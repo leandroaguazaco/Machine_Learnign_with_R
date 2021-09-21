@@ -11,6 +11,14 @@ library(psych)
 library(base)
 library(plotly)
 
+# 0. K-Nearest Neighbors Algorithm ====
+
+# 1. Pick a value for k or number of neighbors
+# 2. Search for the k observations in the training data that are
+#    "nearest" to the measurements of the unknown data.
+# 3. Predict the response of the unknown data point using the most 
+#    popular response value from the k nearest neighbor.
+
 # 1. Data ====
 
 ?Sonar # Information about "Sonar" data set
@@ -226,7 +234,7 @@ wknn_model <- kknn(Class ~ .,
                    train = new_training, 
                    test = new_test[ , -61], 
                    k = 4,
-                   distance = 1, # q parameter in Minkowski formula = Euclidean distance if q = 2
+                   distance = 2, # q parameter in Minkowski formula = Euclidean distance if q = 2
                    kernel = "triweight", 
                    scale = TRUE)
 
