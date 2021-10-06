@@ -95,6 +95,8 @@ prop_check <- bind_cols(training = round(prop.table(table(wine_training$quality)
   mutate(wine_quality = 3:8) %>% 
   relocate(wine_quality, .before = everything())
 
+# Class imbalances: low performance of random forests model is expected
+
 # 1.2.3 randomForest package ====
 
 # Without tuning parameters
@@ -109,6 +111,8 @@ rf_model <- randomForest(x = wine_training[ , 1:11],
 
 print(rf_model)
 importance(rf_model) # Variable importance
+varImpPlot(rf_model, 
+           main = "Varible Importance Plot") # Plot variable importance
 
 # Assessing model performance
 prediction_rf <- predict(object = rf_model, 
@@ -156,3 +160,9 @@ prediction_rf_caret <- predict(object = rf_model_caret,
 
 caret::confusionMatrix(prediction_rf_caret, 
                        wine_testing[ , 12])
+
+# Variables Importance 
+varImp(rf_model_caret)
+plot(varImp(rf_model_caret))
+
+# Conclusion: low performance model for this case study due the class imbalance inside sample
