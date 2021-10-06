@@ -29,7 +29,7 @@ library(caret)
 # 1.1 Data ====
 
 download.file(url = "https://ibm.box.com/shared/static/dpdh09s70abyiwxguehqvcq3dn0m7wve.data",
-              destfile = "mushroom.data")
+              destfile = "Data/mushroom.data")
 
 mushroom <- fread(file = "Data/mushroom.data", 
                   sep = ",", 
@@ -207,6 +207,4 @@ confusionMatrix(testing$Class, predictions_caret2)
 # Tuning parameters: 
 #   Complexity parameter
 #   Maximum node depth 
-
-
 
