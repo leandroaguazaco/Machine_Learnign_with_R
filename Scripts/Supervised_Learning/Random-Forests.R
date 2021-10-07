@@ -271,16 +271,17 @@ caret::RMSE(pred = prediction_rf,
 
 # 1.3.4 Regression - caret package ====
 
+set.seed(20211006) # Date 2021/10/06
 rf_regression_caret <- train(x = sales_training[ , 2:11], 
                              y = sales_training[ , 1], 
                              method = "rf", 
                              ntree = 700, 
                              importance = TRUE, 
-                             preProcess = c("center", "scale"), 
-                             metric = "RMSE", 
-                             trControl = trainControl(method = "cv", 
-                                                      number = 5,), 
-                                                      #repeats = 2), 
+                             #preProcess = c("center", "scale"), 
+                             metric = "Rsquared", 
+                             trControl = trainControl(method = "repeatedcv", 
+                                                      number = 5,#), 
+                                                      repeats = 2), 
                              tuneGrid = data.frame(mtry = seq(2, 10)))
 
 rf_regression_caret
