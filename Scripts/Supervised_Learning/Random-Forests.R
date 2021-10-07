@@ -37,7 +37,7 @@ library(caret)
 
 # k does not have drastic effect on performance.
 # k tuning parameter has a serious effect on the importance predictors values.
-# 1.2 Deploying Random Forests model ====
+# 1.2 Deploying Random Forests model - Classification ====
 
 # Data: wine quality
 # Target variable: quality
@@ -82,6 +82,8 @@ table(factor(wine_data$quality)) # Frequency table of target variable
 
 # 1.2.2 Training and testing data ====
 
+set.seed(20211004) # Date 2021/10/04
+
 wine_training <- sample_frac(tbl = wine_data2, # Training data
                              size = 0.7, 
                              replace = FALSE)
@@ -97,7 +99,7 @@ prop_check <- bind_cols(training = round(prop.table(table(wine_training$quality)
 
 # Class imbalances: low performance of random forests model is expected
 
-# 1.2.3 randomForest package ====
+# 1.2.3 Classification - randomForest package ====
 
 # Without tuning parameters
 
@@ -122,7 +124,7 @@ prediction_rf <- predict(object = rf_model,
 caret::confusionMatrix(prediction_rf, 
                        wine_testing[ , 12])
 
-# 1.2.4 caret package ====
+# 1.2.4 Classification - caret package ====
 
 # With tuning parameters: number of random selected predictors  (k or mtry)
 
@@ -138,7 +140,7 @@ rf_model_caret <- train(x = wine_training[ , 1:11],
                         preProcess = c("center", "scale"), # Standardization
                         metric = "Kappa", # "Accuracy" or "ROC". Performance measure
                         trControl = trainControl(method = "repeatedcv", 
-                                                 number = 5, #5-fold cross-validation with 2 repeat
+                                                 number = 5, #5-fold cross-validation with 2 repeats
                                                  repeats = 2,),
                                                 #summaryFunction = twoClassSummary, 
                                                 #classProbs = TRUE,
@@ -155,8 +157,8 @@ rf_model_caret$preProcess # if it is not taken into account, reduces the calcula
 
 # Assessing model performance
 prediction_rf_caret <- predict(object = rf_model_caret, 
-                         newdata = wine_testing[ , 1:11], 
-                         type = "raw")
+                               newdata = wine_testing[ , 1:11], 
+                               type = "raw")
 
 caret::confusionMatrix(prediction_rf_caret, 
                        wine_testing[ , 12])
@@ -166,3 +168,136 @@ varImp(rf_model_caret)
 plot(varImp(rf_model_caret))
 
 # Conclusion: low performance model for this case study due the class imbalance inside sample
+# 1.3 Deploying Random Forests Model - Regression ====
+
+# Data: housing sales 
+# Target variable: Sldprice - House sale price
+
+# 1.3.1 Data ====
+
+sales_data <- read.csv("https://ibm.box.com/shared/static/fzceg5vdj9hxpf7aopgvfgobi1g4vb4v.csv", 
+                       dec = ".")
+str(sales_data)
+
+# Exploratory Data Analysis
+
+sapply(sales_data, function(x) sum(is.na(x))) # Missing values amount by variable
+
+sales_data <- sales_data %>% 
+  filter(!is.na(hh_avinc)) %>% # Delete missing values
+  mutate(across(.cols = -c(sldprice:d_cbd, hh_avinc), # Changing variable type
+                .fns = as.factor))
+
+skim(sales_data) # Statistics summary
+
+sales_data %>% plot_intro(ggtheme = theme_bw()) # Variables type and missing values and rows
+
+sales_data %>% # Quantitative variables: Histogram
+  select(sldprice:d_cbd, hh_avinc) %>% 
+  rename(No_of_Bedrooms = beds,
+         No_of_Rooms = rooms, 
+         House_Sale_Price = sldprice,
+         Distance_to_Centre  = d_cbd, 
+         Average_Income = hh_avinc) %>% 
+  plot_histogram(geom_histogram_args = list(color = "black"), 
+                 title = "Numeric variables Histogram", 
+                 ggtheme = theme_bw(), 
+                 theme_config = theme(plot.title = element_text(hjust = 0.5)), 
+                 ncol = 3)
+
+
+sales_data %>% # Quantitative variables: normality testing
+  select(sldprice:d_cbd, hh_avinc) %>% 
+  rename(No_of_Bedrooms = beds,
+         No_of_Rooms = rooms, 
+         House_Sale_Price = sldprice,
+         Distance_to_Centre  = d_cbd, 
+         Average_Income = hh_avinc) %>% 
+  plot_qq(title = "Numeric variables QQ Plot", 
+          ggtheme = theme_bw(), 
+          theme_config = theme(plot.title = element_text(hjust = 0.5)), 
+          ncol = 3)
+
+sales_data %>% # Quantitative variables: correlation
+  select(sldprice:d_cbd, hh_avinc) %>% 
+  plot_correlation(title = "Correlation Heatmap", 
+                   cor_args = list(method = "spearman"),
+                   ggtheme = theme_bw(), 
+                   theme_config = theme(legend.position = "right", 
+                                        plot.title = element_text(hjust = 0.5), 
+                                        axis.title = element_blank(), 
+                                        legend.title = element_blank()))
+
+sales_data %>% # Qualitative variables: barplot
+  select(-c(sldprice:d_cbd, hh_avinc)) %>% 
+  plot_bar(ggtheme = theme_bw())
+
+# 1.3.2 Training and testing data ====
+
+set.seed(20211006) # Date 2021/10/06
+sales_training <- sample_frac(tbl = sales_data, # Training data
+                              size = 0.7, 
+                              replace = FALSE)
+
+sales_testing <- setdiff(x = sales_data, # Testing data
+                         y = sales_training)
+
+# 1.3.3 Regression - randomForest package ====
+
+set.seed(20211006) # Date 2021/10/06
+
+rf_regression <- randomForest(x = sales_training[ , 2:11], 
+                              y = sales_training[ , 1],
+                              ntree = 1000, # Default 500
+                              # mtry = 3, # Default according to problem type: regression or classification
+                              importance = TRUE)
+
+print(rf_regression)
+
+# Variable Importance
+importance(rf_regression)
+varImpPlot(rf_regression, 
+           main = "Varible Importance Plot") # Plot variable importance
+
+# Assessing model performance
+prediction_rf <- predict(object = rf_regression, 
+                         newdata = sales_testing[ , 2:11])
+
+caret::R2(pred = prediction_rf, 
+          obs = sales_testing[ , 1])
+
+caret::RMSE(pred = prediction_rf, 
+            obs = sales_testing[ , 1])
+
+# 1.3.4 Regression - caret package ====
+
+rf_regression_caret <- train(x = sales_training[ , 2:11], 
+                             y = sales_training[ , 1], 
+                             method = "rf", 
+                             ntree = 700, 
+                             importance = TRUE, 
+                             preProcess = c("center", "scale"), 
+                             metric = "RMSE", 
+                             trControl = trainControl(method = "cv", 
+                                                      number = 5,), 
+                                                      #repeats = 2), 
+                             tuneGrid = data.frame(mtry = seq(2, 10)))
+
+rf_regression_caret
+rf_regression_caret$results
+rf_regression_caret$bestTune 
+rf_regression_caret$finalModel
+
+# Variables Importance 
+varImp(rf_regression_caret)
+plot(varImp(rf_regression_caret))
+
+# Assessing model performance
+prediction_rf_caret <- predict(object = rf_regression_caret, 
+                               newdata = sales_testing[ , 2:11])
+
+caret::R2(pred = prediction_rf_caret, 
+          obs = sales_testing[ , 1])
+
+caret::RMSE(pred = prediction_rf_caret, 
+            obs = sales_testing[ , 1])
