@@ -8,6 +8,7 @@ library(skimr)
 library(plotly)
 library(randomForest)
 library(caret)
+library(tictoc)
 
 # 1.0 Random Forest Algorithm ====
 
@@ -272,17 +273,19 @@ caret::RMSE(pred = prediction_rf,
 # 1.3.4 Regression - caret package ====
 
 set.seed(20211006) # Date 2021/10/06
+tic()
 rf_regression_caret <- train(x = sales_training[ , 2:11], 
                              y = sales_training[ , 1], 
                              method = "rf", 
-                             ntree = 700, 
+                             ntree = 1000, # ntree recommended by "Applied Statistical Learning" book
                              importance = TRUE, 
                              #preProcess = c("center", "scale"), 
-                             metric = "Rsquared", 
-                             trControl = trainControl(method = "repeatedcv", 
+                             metric = "RMSE", # or Rsquared
+                             trControl = trainControl(method = "repeatedcv", # cv 
                                                       number = 5,#), 
                                                       repeats = 2), 
                              tuneGrid = data.frame(mtry = seq(2, 10)))
+toc()
 
 rf_regression_caret
 rf_regression_caret$results
