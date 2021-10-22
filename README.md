@@ -19,5 +19,5 @@ Exploring some machine learning algorithms and models through *R programming lan
 * Random forests.
 
 <p align="center">
-  <img src="https://mega.nz/file/j19X1ahS#fowmE-7EVteK9N80ytpVw5Mfx88brZZ13c-2bUh1J8k" />
+  <img src = "Outputs/Plots/Test Image.png" />
 </p>
