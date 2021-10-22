@@ -18,6 +18,8 @@ Exploring some machine learning algorithms and models through *R programming lan
 * Root mean squared error 
 * Random forests.
 
+## Test Image
+
 <p align="center">
-  <img src = "Outputs/Plots/Test Image.png" />
+  <img src = "Outputs/Plots/Test Image.png" width = "600"/>
 </p>
