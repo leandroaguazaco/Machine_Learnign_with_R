@@ -370,6 +370,15 @@ which(vif(x) > 10)
 
 # No Collinearity detected
 
+# 3.4.5 Assumptions According Importance ====
+
+(Faraway, 2015):
+
+# 1. The systematic form of the model.
+# 2. Dependence of errors - Correlation: errors no correlated.
+# 3. Nonconstant variance - Homoscedasticity.
+# 4. Normalatiy: the least important assumption. 
+
 # 4. Predictions ====
 
 # 4.1 Prediction of a Future Value ====
