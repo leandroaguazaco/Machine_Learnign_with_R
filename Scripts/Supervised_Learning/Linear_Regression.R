@@ -164,7 +164,7 @@ names(freedman_lm)
 summary(freedman_lm)
 
 # The density variable is not significant in the model (p value = 0.74).
-# Low R squared (0.229), the model explains only the 23% variance of the response variabl.
+# Low R squared (0.229), the model explains only the 23% variance of the response variable.
 # F-statitic = 9.5 > 1 (p value ~ 0), there is a linear relationship between the response and at least one predictor.
 
 # 3.2 Optimal Linear Model ====
