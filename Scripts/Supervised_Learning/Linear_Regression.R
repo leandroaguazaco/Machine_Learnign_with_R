@@ -164,7 +164,7 @@ names(freedman_lm)
 summary(freedman_lm)
 
 # The density variable is not significant in the model (p value = 0.74).
-# Low R squared (0.229), the model explains only the 23% variance of the response variable.
+# Low R squared (0.229), the model explains only the 23% variance of the response variabl.
 # F-statitic = 9.5 > 1 (p value ~ 0), there is a linear relationship between the response and at least one predictor.
 
 # 3.2 Optimal Linear Model ====
@@ -194,8 +194,9 @@ confint(freedman_lm_opt)
 
 # a. Constant Variance (Homoscedasticity) and Linearity ====
 
-# Looking for dispersion, no trends or patterns in both plots
-# Nonlinearity in the structural part of the model diagnostic
+# Looking for dispersion, no trends or patterns in both plots.
+# Ideally, the residual plot will show no discernible pattern (James et al., 2021). 
+# Nonlinearity in the structural part of the model diagnostic.
 
 par(mfrow = c(2, 2)) # Change the panel layout to 2 x 2
 plot(freedman_lm_opt) # 1. Upper left and bottom left graph
@@ -208,6 +209,9 @@ ggplot(data = NULL,
 	       fill = "gray") + 
   geom_hline(yintercept = 0, 
 		 linetype = 2) + 
+  geom_smooth(se = FALSE, 
+		  color = "red", 
+	        linetype = 1) + 
   labs(title = "Checking Error Assumptions: Constant Variance",
 	 subtitle = "Residuals vs Fitted Values",
        x = expression(paste("Fitted Value ", (hat(y)))), 
@@ -221,11 +225,16 @@ ggplot(data = NULL,
 			   y = sqrt(abs(freedman_lm_opt$residuals)))) +
   geom_point(colour = "black", 
 	       fill = "gray") + 
+  geom_smooth(se = FALSE, 
+		  color = "red", 
+	        linetype = 1) + 
   labs(title = "Checking Error Assumptions: Constant Variance",
 	 subtitle = "Square Root of Absolute Residuals vs Fitted Values",
        x = expression(paste("Fitted Value ", (hat(y)))), 
 	 y = expression(paste("Square root of absolute residuals ", (sqrt(abs(hat(epsilon))))))) + 
   theme_bw()
+
+Conclution: No straight-line relationship between the predictors and the response, this possibly caused a low R2
 
 # Homoscedasticity Numerial Test
 
@@ -281,6 +290,7 @@ dwtest(freedman_lm_opt)
 
 # A leverage point is extreme in the predictor space. It has the potential to influence the fit, 
 # but does not necessarily do so (Faraway, 2015).
+# High leverage observations tend to have a sizable impact on the estimated regression line (James et al., 2021).
 
 c_l <- 2*(sum(hatvalues(freedman_lm_opt))/nrow(freedman)) # Critic Limit: 4 estimated parameters, 110 observations
 c_l
@@ -289,17 +299,24 @@ round(hatvalues(freedman_lm_opt), 3)
 
 which(hatvalues(freedman_lm_opt) > c_l)
 
-# Plot
-par(mfrow = c(1, 2)) # Change back to 1 x 1
-halfnorm(hatvalues(freedman_lm),
-	   labs = row.names(freedman),
-	   ylab = "Leverages")
-
-qqnorm(rstandard(freedman_lm)) 
-abline(0,1)
-
 # Values greater than 0.055 are leverages.
 # In this case, there are eight leverage values
+
+# Studentized residual vs Leverage statistic
+ggplot(data = NULL, 
+	 mapping = aes(x = hatvalues(freedman_lm_opt), 
+			   y = rstudent(freedman_lm_opt))) + 
+  geom_point() + 
+  scale_x_continuous(breaks = seq(0, 0.5, 0.05)) + 
+  geom_hline(yintercept = 0, 
+		 linetype = 2) + 
+  geom_vline(xintercept = c_l, 
+		 linetype = 2) + 
+  labs(title = "Unusual Observations Diagnostic: High Leverage Points", 
+	 subtitle = "Studentized residual vs Leverage statistic", 
+       x = expression(paste("Leverage statistic  ", (h[i]))), 
+       y = "Studentized Residuals") + 
+  theme_bw()
 
 # b. Outliers ====
 
@@ -315,6 +332,18 @@ freedman %>%
 	   subtitle = "Outliers") + 
     theme_bw() + 
     theme(axis.text.y = element_blank())
+
+# Studentized residual vs Fitted values: 
+ggplot(data = NULL, 
+	 mapping = aes(x = fitted.values(freedman_lm_opt), 
+	    		   y = rstudent(freedman_lm_opt))) + 
+  geom_point() + 
+  labs(title = "Unusual Observations Diagnostic: Outliers", 
+	 subtitle = "Studentized residual vs Fitted values", 
+       caption = " Expected Studentized residuals values between -3 and 3", 
+       x = expression(paste("Fitted Value ", (hat(y)))), 
+       y = "Studentized Residuals") + 
+  theme_bw()
 
 # Studentized Residuals: Alfa = 0.05, Bonferroni correction
 
@@ -363,10 +392,10 @@ termplot(model = freedman_lm_opt,
 
 # b. Collinearity ====
 
-x <- model.matrix(freedman_lm_opt)[ ,-1] # Without the intercept
+freedman_predictors <- model.matrix(freedman_lm_opt)[ ,-1] # Without the intercept
 
 # Variance inflation factor (VIF)
-which(vif(x) > 10)
+which(vif(freedman_predictors) > 10)
 
 # No Collinearity detected
 
