@@ -374,10 +374,13 @@ which(vif(x) > 10)
 
 #(Faraway, 2015):
 
-# 1. The systematic form of the model.
-# 2. Dependence of errors - Correlation: errors no correlated.
-# 3. Nonconstant variance - Homoscedasticity.
+# 1. The systematic form of the model. Non-linearity of the response-predictor relationships.
+# 2. Dependence of errors - Correlation: errors no correlated. Correlation of error terms.
+# 3. Nonconstant variance - Homoscedasticity. Non-constant variance of error terms.
 # 4. Normalatiy: the least important assumption. 
+# 5. Outliers
+# 6. High-leverage points.
+# 7. Collinearity.
 
 # 4. Predictions ====
 
