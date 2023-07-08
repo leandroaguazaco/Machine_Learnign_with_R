@@ -7,6 +7,7 @@
   <img alt="Static Badge" src="https://img.shields.io/badge/status-finished-green">
 
 </div>  
+
 Exploring some machine learning algorithms and models through *R programming language*. Course powered by **IBM** through *Cognitive Class* platform.
 
 <p align="center">
